@@ -413,6 +413,47 @@ async def queue_event(interaction: discord.Interaction, event_time: str, roles: 
     # Send the embed
     await send_embed(guild, 'bot-test', "⏰ Event Created ⏰", f"The event {event.title} has been scheduled for " + event.time.strftime("%A, %b. %d at %I:%M%p") + ".", event, 0x1a384c)
 
+@bot.tree.command(name='clear')
+@commands.has_permissions(administrator=True)  # only allow administrators to run this command
+async def clear(interaction: discord.Interaction, amount: int):
+    await interaction.response.send_message(f"Cleared {amount} messages from this channel.")
+    await interaction.channel.purge(limit=amount+1,check=lambda m: m.author != bot.user)
+
+@bot.tree.command(name='mute')
+@commands.has_permissions(administrator=True)  # only allow administrators to run this command
+async def mute(ctx: discord.Interaction, member: discord.Member):
+    mute_role = discord.utils.get(ctx.guild.roles, name='Muted')  # assuming 'Muted' role exists
+    await member.add_roles(mute_role)
+    await ctx.response.send_message(f"{member.mention} has been muted.")
+
+@bot.tree.command(name='ban')
+@commands.has_permissions(administrator=True)  # only allow administrators to run this command
+async def ban(ctx: discord.Interaction, member: discord.Member, reason: str = None):
+    await member.ban(reason=reason)
+    await ctx.response.send_message(f"{member.mention} was banned.")
+
+@bot.tree.command(name='kick')
+@commands.has_permissions(administrator=True)  # only allow administrators to run this command
+async def kick(ctx: discord.Interaction, member: discord.Member, reason: str = None):
+    await member.kick(reason=reason)
+    await ctx.response.send_message(f"{member.mention} was kicked.")
+
+@bot.tree.command(name='userinfo')
+async def userinfo(ctx: discord.Interaction, member: discord.Member):
+    roles = [role for role in member.roles]
+    embed = discord.Embed(color=member.color, timestamp=datetime.utcnow())
+    embed.set_author(name=f"User Info - {member}")
+    embed.set_thumbnail(url=member.avatar)
+    embed.add_field(name="ID:", value=member.id)
+    embed.add_field(name="Guild name:", value=member.display_name)
+    embed.add_field(name="Created at:", value=member.created_at.strftime("%a, %#d %B %Y, %I:%M %p UTC"))
+    embed.add_field(name="Joined at:", value=member.joined_at.strftime("%a, %#d %B %Y, %I:%M %p UTC"))
+    embed.add_field(name=f"Roles ({len(roles)})", value=" ".join([role.mention for role in member.roles if role.name != "@everyone"]))
+    embed.add_field(name="Top role:", value=member.top_role.mention)
+    embed.add_field(name="Bot?", value=member.bot)
+    await ctx.response.send_message(embed=embed)
+
+
 @bot.tree.command(name='roll', description='Roll a dice')
 async def roll(interaction: discord.Interaction, *, dice: str):
     try:
