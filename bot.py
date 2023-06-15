@@ -33,7 +33,10 @@ import openai
 '''
 #
 
-openai.api_key = 'sk-MwU7sftXkBhDYwi003Fi' + 'T3BlbkFJLLRwa4YoPNb2ueEe1VCY' # Free tier key, sharable
+API_KEY_1 = os.environ.get("API_KEY_1")
+API_KEY_2 = os.environ.get("API_KEY_2")
+
+openai.api_key = API_KEY_1 + API_KEY_2 # Free tier key, sharable
 
 bot = commands.Bot(command_prefix="!", intents=discord.Intents.all())
 intents = discord.Intents.default()
