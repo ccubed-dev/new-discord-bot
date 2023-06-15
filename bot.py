@@ -303,7 +303,19 @@ class UniversitySelect(Select):
             discord.SelectOption(label="University of Waterloo", value="University of Waterloo"),
             discord.SelectOption(label="University of Guelph", value="University of Guelph"),
             discord.SelectOption(label="McGill University", value="McGill University"),
+            discord.SelectOption(label="University of British Colombia", value="University of British Colombia"),
+            discord.SelectOption(label="Concordia University", value="Concordia University"),
+            discord.SelectOption(label="Université Laval", value="Université Laval"),
+            discord.SelectOption(label="Ryerson University", value="Ryerson University"),
+            discord.SelectOption(label="Carleton University", value="Carleton University"),
+            discord.SelectOption(label="Queen's University", value="Queen's University"),
+            discord.SelectOption(label="University of Manitoba", value="University of Manitoba"),
+            discord.SelectOption(label="Université de Montréal", value="Université de Montréal"),
+            discord.SelectOption(label="McMaster University", value="McMaster University"),
+            discord.SelectOption(label="UofT St. George", value="UofT St. George"),
+            discord.SelectOption(label="UofT Scarborough", value="UofT Scarborough")
         ]
+
 
         super().__init__(placeholder="Select your University", min_values=1, max_values=1, options=options)
 
@@ -311,12 +323,12 @@ class UniversitySelect(Select):
         # Find the role that matches the selected university
         role = discord.utils.get(interaction.guild.roles, name=self.values[0])
 
+        #await interaction.response.send_message(f"Your selected university is: {self.values[0]}")
         # Check if the role exists
         if role is not None:
             # If the role exists, add it to the member
             await interaction.user.add_roles(role)
 
-        #await interaction.response.send_message(f"Your selected university is: {self.values[0]}")
 
 class InterestSelect(Select):
     def __init__(self):
@@ -324,11 +336,23 @@ class InterestSelect(Select):
             discord.SelectOption(label="Projects & Technology", value="Projects & Technology"),
             discord.SelectOption(label="Gaming & eSports", value="Gaming & eSports"),
             discord.SelectOption(label="Sports & Fitness", value="Sports & Fitness"),
+            discord.SelectOption(label="Food", value="Food"),
+            discord.SelectOption(label="Music", value="Music"),
+            discord.SelectOption(label="Books", value="Books"),
+            discord.SelectOption(label="Anime", value="Anime"),
+            discord.SelectOption(label="Politics", value="Politics"),
+            discord.SelectOption(label="Finance & Investments", value="Finance & Investments"),
+            discord.SelectOption(label="Fashion & OOTD", value="Fashion & OOTD"),
+            discord.SelectOption(label="Art", value="Art"),
+            discord.SelectOption(label="TV & Movies", value="TV & Movies")
         ]
+
 
         super().__init__(placeholder="Select your Interests", min_values=1, max_values=3, options=options)
 
     async def callback(self, interaction: discord.Interaction):
+        #await interaction.response.send_message(f"Your selected interests are: {', '.join(self.values)}")
+
         for interest in self.values:
             # Find the role that matches the selected interest
             role = discord.utils.get(interaction.guild.roles, name=interest)
@@ -336,9 +360,8 @@ class InterestSelect(Select):
             # Check if the role exists
             if role is not None:
                 # If the role exists, add it to the member
-                await interaction.user.add_roles(role)
 
-        #await interaction.response.send_message(f"Your selected interests are: {', '.join(self.values)}")
+                await interaction.user.add_roles(role)
 
 
 @bot.tree.command(name='select')
@@ -521,6 +544,19 @@ async def deleterole(interaction: discord.Interaction, *, name: str):
     await interaction.response.send_message(f'Deleting role: {name}')
     role = discord.utils.get(interaction.guild.roles, name=name)
     await role.delete()
+
+@bot.tree.command(name='addrole')
+@commands.has_permissions(manage_roles=True)  # only allow users with role management permissions to run this command
+async def add_role(ctx, member: discord.Member, role: discord.Role):
+    await member.add_roles(role)
+    await ctx.send(f"Role {role.name} added to {member.display_name}.")
+
+@bot.tree.command(name='removerole')
+@commands.has_permissions(manage_roles=True)  # only allow users with role management permissions to run this command
+async def remove_role(ctx, member: discord.Member, role: discord.Role):
+    await member.remove_roles(role)
+    await ctx.send(f"Role {role.name} removed from {member.display_name}.")
+
 
 
 bot.run(TOKEN)
