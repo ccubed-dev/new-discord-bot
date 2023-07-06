@@ -1,3 +1,5 @@
-aiohttp
 discord.py
+discord-interactions
+discord-ext-tasks
+aiohttp
 openai

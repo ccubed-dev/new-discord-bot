@@ -32,13 +32,14 @@ from discord import ui, interactions, Embed, Color
 import openai
 '''
 #
+API_KEY_1 = os.environ.get("API_KEY_1")
+API_KEY_2 = os.environ.get("API_KEY_2")
 
-openai.api_key = 'sk-jEHPwAEyS80PmZTlHq6' + 'LT3BlbkFJvVEnsYaN8mSGTZ3ECm6z' # Free tier key, sharable
+openai.api_key = API_KEY_1 + API_KEY_2 # Free tier key, sharable
 
 bot = commands.Bot(command_prefix="!", intents=discord.Intents.all())
 intents = discord.Intents.default()
 TOKEN= os.environ.get("TOKEN")
-
 
 @bot.event
 async def on_ready():
@@ -49,6 +50,46 @@ async def on_ready():
         print(f"Synced {len(synced)} command(s)")
     except Exception as e:
         print(e)
+
+
+
+
+welcome_enabled = True  # initially the welcome messages are enabled
+
+
+
+@bot.tree.command(name='toggle_welcome')
+@commands.has_permissions(administrator=True)  # only allow administrators to run this command
+async def toggle_welcome(ctx):
+    global welcome_enabled
+    welcome_enabled = not welcome_enabled
+    status = "enabled" if welcome_enabled else "disabled"
+    await ctx.response.send_message(f"Welcome DMs have been {status}.")
+
+
+
+
+@bot.event
+async def on_member_join(member):
+    global welcome_enabled
+    if welcome_enabled:
+
+        embed = discord.Embed(
+            title="Welcome to Computing Councils of Canada",
+            description=(
+                "We are delighted to have you join us. "
+                "This community is focused on bringing together "
+                "all enthusiasts and professionals related to computing. "
+                "Here, we discuss, share, and learn about various computing topics. "
+                "Feel free to explore, engage in discussions, and most importantly, "
+                "have fun! If you have any questions, don't hesitate to ask."
+            ),
+            color=0x1a384c,
+        )
+        embed.set_thumbnail(url="https://media.licdn.com/dms/image/C4E0BAQFZ83Q-ryJyYw/company-logo_200_200/0/1612553017924?e=2147483647&v=beta&t=gQtTxgENMUZilwaIRFW-UVbVkEdX0W7HdhFmDXj5Kng")
+        await message.author.send(embed=embed)
+
+
 
 
 class IgnoreButton(discord.ui.Button):
@@ -110,24 +151,24 @@ class MessageView(discord.ui.View):
 async def on_message(message):
     if message.author == bot.user:
         return
-
+        
     # Create a conversation with the model
     # The prompt makes the model very eager to flag messages - maybe turn down the intensity to avoid randomly flagging ppl? ¯\_(ツ)_/¯
+    empty = "{" + "}"
     conversation = [
-        {"role": "system", "content": "You are a content review model. Your task is to review incoming messages and determine if they should be flagged for review. If a message is flagged, explain what parts were flagged and why. Only derogatory messages with clear malice should be flagged, ones made in good faith can remain unflagged."},
-        {"role": "user", "content": "hi"},
-        {"role": "assistant", "content": '{"flagged":false}'},
-        {"role": "user", "content": "what's your github? i'll add you there."},
-        {"role": "assistant", "content": '{"flagged":false}'},
-        {"role": "user", "content": "Sure you can check my js stuff there its https://github.com/stevejobs"},
-        {"role": "assistant", "content": '{"flagged":false}'},
-        {"role": "user", "content": "bro you're actually so stupid and dumb and a dummy poopy head and you should actually go back to grade 1 like why would you think javascript is a good language"},
+        {"role": "system", "content": "You are a content review model. Your task is to review incoming messages and determine if they should be flagged for review. If a message is flagged, explain what parts were flagged and why. Only derogatory messages with clear malice should be flagged, ones made in good faith can remain unflagged. Respond ONLY in the correct format, your only two options are empty brackets and flagged=true, sections and the reason in JSON format."},
+        {"role": "user", "content": "Check message: hi"},
+        {"role": "assistant", "content": empty},
+        {"role": "user", "content": "Check message: what's your github? i'll add you there."},
+        {"role": "assistant", "content": empty},
+        {"role": "user", "content": "Check message: Sure you can check my js stuff there its https://github.com/stevejobs"},
+        {"role": "assistant", "content": empty},
+        {"role": "user", "content": "Check message: bro you're actually so stupid and dumb and a dummy poopy head and you should actually go back to grade 1 like why would you think javascript is a good language"},
         {"role": "assistant", "content": '{"flagged":true,"sections":["stupid and dumb","dummy poopy head","go back to grade 1"],"reason":"The user\'s statement includes highly offensive language, personal attacks, and derogatory remarks."}'},
-        {"role": "user", "content": "??? What?"},
-        {"role": "assistant", "content": '{"flagged":false}'},
-        {"role": "user", "content": message.content}
+        {"role": "user", "content": "Check message: ??? What?"},
+        {"role": "assistant", "content": empty},
+        {"role": "user", "content": "Check message: " + message.content}
     ]
-
     # Generate a response from the model
     response = openai.ChatCompletion.create(
       model="gpt-3.5-turbo",
@@ -136,10 +177,10 @@ async def on_message(message):
 
     # Get the model's reply
     model_reply = response['choices'][0]['message']['content']
-
+  
     resp = json.loads(model_reply)
     # If the model decides to flag the message
-    if resp['flagged'] == True:
+    if 'flagged' in resp:
         guild = discord.utils.get(bot.guilds, name='Computing Councils of Canada - Internal')
         channel = discord.utils.get(guild.channels, name='bot-test')
 
@@ -258,32 +299,29 @@ class UniversitySelect(Select):
             discord.SelectOption(label="University of Waterloo", value="University of Waterloo"),
             discord.SelectOption(label="University of Guelph", value="University of Guelph"),
             discord.SelectOption(label="McGill University", value="McGill University"),
+            discord.SelectOption(label="University of British Colombia", value="University of British Colombia"),
             discord.SelectOption(label="Concordia University", value="Concordia University"),
-            discord.SelectOption(label="Toronto Metropolitan University", value="Toronto Metropolitan University"),
-            discord.SelectOption(label="Universite Laval", value="University Laval"),
+            discord.SelectOption(label="Université Laval", value="Université Laval"),
+            discord.SelectOption(label="Ryerson University", value="Ryerson University"),
             discord.SelectOption(label="Carleton University", value="Carleton University"),
-            discord.SelectOption(label="University of Windsor", value="University of Windsor"),
-            discord.SelectOption(label="University of British Columbia", value="University of British Columbia"),
-            discord.SelectOption(label="Queens University", value="Queens University"),
+            discord.SelectOption(label="Queen's University", value="Queen's University"),
             discord.SelectOption(label="University of Manitoba", value="University of Manitoba"),
-            discord.SelectOption(label="Universite de Montreal", value="University de Montreal"),
+            discord.SelectOption(label="Université de Montréal", value="Université de Montréal"),
             discord.SelectOption(label="McMaster University", value="McMaster University"),
-            discord.SelectOption(label="UofT St.George", value="UofT St.George"),
+            discord.SelectOption(label="UofT St. George", value="UofT St. George"),
             discord.SelectOption(label="UofT Scarborough", value="UofT Scarborough")
         ]
-
         super().__init__(placeholder="Select your University", min_values=1, max_values=1, options=options)
 
     async def callback(self, interaction: discord.Interaction):
         # Find the role that matches the selected university
         role = discord.utils.get(interaction.guild.roles, name=self.values[0])
 
+        #await interaction.response.send_message(f"Your selected university is: {self.values[0]}")
         # Check if the role exists
         if role is not None:
             # If the role exists, add it to the member
             await interaction.user.add_roles(role)
-
-        #await interaction.response.send_message(f"Your selected university is: {self.values[0]}")
 
 class InterestSelect(Select):
     def __init__(self):
@@ -299,13 +337,15 @@ class InterestSelect(Select):
             discord.SelectOption(label="Finance & Investments", value="Finance & Investments"),
             discord.SelectOption(label="Fashion & OOTD", value="Fashion & OOTD"),
             discord.SelectOption(label="Art", value="Art"),
-            discord.SelectOption(label="TV & Movies", value="TV & Movies"),
-            discord.SelectOption(label="Random", value="Random")
+            discord.SelectOption(label="TV & Movies", value="TV & Movies")
         ]
+
 
         super().__init__(placeholder="Select your Interests", min_values=1, max_values=3, options=options)
 
     async def callback(self, interaction: discord.Interaction):
+        #await interaction.response.send_message(f"Your selected interests are: {', '.join(self.values)}")
+
         for interest in self.values:
             # Find the role that matches the selected interest
             role = discord.utils.get(interaction.guild.roles, name=interest)
@@ -313,10 +353,8 @@ class InterestSelect(Select):
             # Check if the role exists
             if role is not None:
                 # If the role exists, add it to the member
+
                 await interaction.user.add_roles(role)
-
-        #await interaction.response.send_message(f"Your selected interests are: {', '.join(self.values)}")
-
 
 @bot.tree.command(name='select')
 async def select(interaction: discord.Interaction):
@@ -366,6 +404,9 @@ async def check_events():
             # Remove the event from the list
             events.remove(event)
 
+
+# For notifying about club meetings, coding competitions,
+# hackathons, guest lectures, workshops, etc.
 @bot.tree.command(name='queue_event',description="queue an event")
 async def queue_event(interaction: discord.Interaction, event_time: str, roles: str, title: str, description: str):
     guild = discord.utils.get(bot.guilds, name='Computing Councils of Canada - Internal')
@@ -386,6 +427,46 @@ async def queue_event(interaction: discord.Interaction, event_time: str, roles: 
 
     # Send the embed
     await send_embed(guild, 'bot-test', "⏰ Event Created ⏰", f"The event {event.title} has been scheduled for " + event.time.strftime("%A, %b. %d at %I:%M%p") + ".", event, 0x1a384c)
+
+@bot.tree.command(name='clear')
+@commands.has_permissions(administrator=True)  # only allow administrators to run this command
+async def clear(interaction: discord.Interaction, amount: int):
+    await interaction.response.send_message(f"Cleared {amount} messages from this channel.")
+    await interaction.channel.purge(limit=amount+1,check=lambda m: m.author != bot.user)
+
+@bot.tree.command(name='mute')
+@commands.has_permissions(administrator=True)  # only allow administrators to run this command
+async def mute(ctx: discord.Interaction, member: discord.Member):
+    mute_role = discord.utils.get(ctx.guild.roles, name='Muted')  # assuming 'Muted' role exists
+    await member.add_roles(mute_role)
+    await ctx.response.send_message(f"{member.mention} has been muted.")
+
+@bot.tree.command(name='ban')
+@commands.has_permissions(administrator=True)  # only allow administrators to run this command
+async def ban(ctx: discord.Interaction, member: discord.Member, reason: str = None):
+    await member.ban(reason=reason)
+    await ctx.response.send_message(f"{member.mention} was banned.")
+
+@bot.tree.command(name='kick')
+@commands.has_permissions(administrator=True)  # only allow administrators to run this command
+async def kick(ctx: discord.Interaction, member: discord.Member, reason: str = None):
+    await member.kick(reason=reason)
+    await ctx.response.send_message(f"{member.mention} was kicked.")
+
+@bot.tree.command(name='userinfo')
+async def userinfo(ctx: discord.Interaction, member: discord.Member):
+    roles = [role for role in member.roles]
+    embed = discord.Embed(color=member.color, timestamp=datetime.utcnow())
+    embed.set_author(name=f"User Info - {member}")
+    embed.set_thumbnail(url=member.avatar)
+    embed.add_field(name="ID:", value=member.id)
+    embed.add_field(name="Guild name:", value=member.display_name)
+    embed.add_field(name="Created at:", value=member.created_at.strftime("%a, %#d %B %Y, %I:%M %p UTC"))
+    embed.add_field(name="Joined at:", value=member.joined_at.strftime("%a, %#d %B %Y, %I:%M %p UTC"))
+    embed.add_field(name=f"Roles ({len(roles)})", value=" ".join([role.mention for role in member.roles if role.name != "@everyone"]))
+    embed.add_field(name="Top role:", value=member.top_role.mention)
+    embed.add_field(name="Bot?", value=member.bot)
+    await ctx.response.send_message(embed=embed)
 
 @bot.tree.command(name='roll', description='Roll a dice')
 async def roll(interaction: discord.Interaction, *, dice: str):
@@ -435,7 +516,7 @@ async def delete(interaction: discord.Interaction, *, name: str):
     await interaction.response.send_message(f'Deleting channel: {name}')
     channel = discord.utils.get(interaction.guild.channels, name=name)
     await channel.delete()
-
+ 
 # admin only command to create roles
 
 
@@ -464,6 +545,18 @@ async def social(interaction: discord.Interaction):
     fb = "Facebook: https://www.facebook.com/ccubed.dev"
     site = "Website: https://ccubed.dev/"
     await interaction.response.send_message(f'{ig} \n {linked} \n {twitter} \n {fb} \n {site}')
+
+@bot.tree.command(name='addrole')
+@commands.has_permissions(manage_roles=True)  # only allow users with role management permissions to run this command
+async def add_role(ctx, member: discord.Member, role: discord.Role):
+    await member.add_roles(role)
+    await ctx.send(f"Role {role.name} added to {member.display_name}.")
+
+@bot.tree.command(name='removerole')
+@commands.has_permissions(manage_roles=True)  # only allow users with role management permissions to run this command
+async def remove_role(ctx, member: discord.Member, role: discord.Role):
+    await member.remove_roles(role)
+    await ctx.send(f"Role {role.name} removed from {member.display_name}.")
 
 
 
