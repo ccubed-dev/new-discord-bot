@@ -32,7 +32,6 @@ from discord import ui, interactions, Embed, Color
 import openai
 '''
 #
-
 API_KEY_1 = os.environ.get("API_KEY_1")
 API_KEY_2 = os.environ.get("API_KEY_2")
 
@@ -40,8 +39,7 @@ openai.api_key = API_KEY_1 + API_KEY_2 # Free tier key, sharable
 
 bot = commands.Bot(command_prefix="!", intents=discord.Intents.all())
 intents = discord.Intents.default()
-
-TOKEN = os.environ.get("TOKEN")
+TOKEN= os.environ.get("TOKEN")
 
 @bot.event
 async def on_ready():
@@ -52,7 +50,6 @@ async def on_ready():
         print(f"Synced {len(synced)} command(s)")
     except Exception as e:
         print(e)
-
 
 
 
@@ -91,10 +88,6 @@ async def on_member_join(member):
         )
         embed.set_thumbnail(url="https://media.licdn.com/dms/image/C4E0BAQFZ83Q-ryJyYw/company-logo_200_200/0/1612553017924?e=2147483647&v=beta&t=gQtTxgENMUZilwaIRFW-UVbVkEdX0W7HdhFmDXj5Kng")
         await message.author.send(embed=embed)
-
-
-
-
 
 
 
@@ -318,8 +311,6 @@ class UniversitySelect(Select):
             discord.SelectOption(label="UofT St. George", value="UofT St. George"),
             discord.SelectOption(label="UofT Scarborough", value="UofT Scarborough")
         ]
-
-
         super().__init__(placeholder="Select your University", min_values=1, max_values=1, options=options)
 
     async def callback(self, interaction: discord.Interaction):
@@ -331,7 +322,6 @@ class UniversitySelect(Select):
         if role is not None:
             # If the role exists, add it to the member
             await interaction.user.add_roles(role)
-
 
 class InterestSelect(Select):
     def __init__(self):
@@ -365,7 +355,6 @@ class InterestSelect(Select):
                 # If the role exists, add it to the member
 
                 await interaction.user.add_roles(role)
-
 
 @bot.tree.command(name='select')
 async def select(interaction: discord.Interaction):
@@ -479,7 +468,6 @@ async def userinfo(ctx: discord.Interaction, member: discord.Member):
     embed.add_field(name="Bot?", value=member.bot)
     await ctx.response.send_message(embed=embed)
 
-
 @bot.tree.command(name='roll', description='Roll a dice')
 async def roll(interaction: discord.Interaction, *, dice: str):
     try:
@@ -547,6 +535,16 @@ async def deleterole(interaction: discord.Interaction, *, name: str):
     await interaction.response.send_message(f'Deleting role: {name}')
     role = discord.utils.get(interaction.guild.roles, name=name)
     await role.delete()
+
+#Social Media Links
+@bot.tree.command(name='social', description='Social Media Links')
+async def social(interaction: discord.Interaction):
+    ig = "Instagram: https://www.instagram.com/ccubed_dev/?hl=en"
+    linked = "LinkedIn: https://www.linkedin.com/company/ccubed-dev"
+    twitter = "Twitter: https://twitter.com/ccubed_dev"
+    fb = "Facebook: https://www.facebook.com/ccubed.dev"
+    site = "Website: https://ccubed.dev/"
+    await interaction.response.send_message(f'{ig} \n {linked} \n {twitter} \n {fb} \n {site}')
 
 @bot.tree.command(name='addrole')
 @commands.has_permissions(manage_roles=True)  # only allow users with role management permissions to run this command
