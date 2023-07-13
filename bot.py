@@ -5,10 +5,6 @@ from datetime import datetime, timedelta
 import asyncio, aiohttp, os, random, openai, json
 from discord.interactions import Interaction
 
-
-
-API_KEY_1 = os.environ.get("API_KEY_1")
-
 openai.api_key = 'sk-jEHPwAEyS80PmZTlHq6' + 'LT3BlbkFJvVEnsYaN8mSGTZ3ECm6z' # Free tier key, sharable
 
 bot = commands.Bot(command_prefix="!", intents=discord.Intents.all())
@@ -239,13 +235,12 @@ async def eightball(interaction: discord.Interaction, *, question: str):
         {"role": "user", "content": f"{question}"}
     ]
     
-
     # Generate a response from the model
     response = openai.ChatCompletion.create(
       model="gpt-3.5-turbo",
       messages=conversation
     )
-
+    
     # Get the model's reply
     model_reply = response['choices'][0]['message']['content']
     
