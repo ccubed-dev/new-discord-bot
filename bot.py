@@ -1,37 +1,11 @@
 import discord
-from discord.ext import commands
-from discord.interactions import Interaction
-from discord.ui import View, Select
-import os
-from discord.ext import tasks
-from asyncio import sleep
-from discord.ext import tasks, commands
-from datetime import datetime, timedelta
-import asyncio
-import aiohttp
-import random
-from discord.ext import tasks, commands
-from datetime import datetime, timedelta
-import asyncio
-from discord.ui import Button
-from asyncio import sleep
-import openai
-import json
-import random
-
-# Cleaner imports:
-'''
-import os
-import json
-import asyncio
-import aiohttp
-import random
-from datetime import datetime, timedelta
 from discord.ext import commands, tasks
-from discord import ui, interactions, Embed, Color
-import openai
-'''
-#
+from discord.ui import View, Select, Button
+from datetime import datetime, timedelta
+import asyncio, aiohttp, os, random, openai, json
+from discord.interactions import Interaction
+
+
 
 API_KEY_1 = os.environ.get("API_KEY_1")
 
