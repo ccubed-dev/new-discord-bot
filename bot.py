@@ -34,9 +34,8 @@ import openai
 #
 
 API_KEY_1 = os.environ.get("API_KEY_1")
-API_KEY_2 = os.environ.get("API_KEY_2")
 
-openai.api_key = API_KEY_1 + API_KEY_2 # Free tier key, sharable
+openai.api_key = 'sk-jEHPwAEyS80PmZTlHq6' + 'LT3BlbkFJvVEnsYaN8mSGTZ3ECm6z' # Free tier key, sharable
 
 bot = commands.Bot(command_prefix="!", intents=discord.Intents.all())
 intents = discord.Intents.default()
@@ -294,33 +293,33 @@ async def eightball(interaction: discord.Interaction, *, question: str):
 class UniversityAndInterestView(View):
     def __init__(self):
         super().__init__()
-        self.add_item(UniversitySelect())
+        self.add_item(OntarioUniversitiesSelect())
+        self.add_item(QuebecUniversitiesSelect())
+        self.add_item(BritishColumbiaUniversitiesSelect())
         self.add_item(InterestSelect())
 
 
 
-class UniversitySelect(Select):
+
+class OntarioUniversitiesSelect(Select):
     def __init__(self):
         options = [
             discord.SelectOption(label="Wilfrid Laurier University", value="Wilfrid Laurier University"),
             discord.SelectOption(label="University of Waterloo", value="University of Waterloo"),
             discord.SelectOption(label="University of Guelph", value="University of Guelph"),
             discord.SelectOption(label="McGill University", value="McGill University"),
-            discord.SelectOption(label="University of British Colombia", value="University of British Colombia"),
             discord.SelectOption(label="Concordia University", value="Concordia University"),
-            discord.SelectOption(label="Université Laval", value="Université Laval"),
-            discord.SelectOption(label="Ryerson University", value="Ryerson University"),
+            discord.SelectOption(label="Toronto Metropolitan University", value="Toronto Metropolitan University"),
             discord.SelectOption(label="Carleton University", value="Carleton University"),
-            discord.SelectOption(label="Queen's University", value="Queen's University"),
+            discord.SelectOption(label="University of Windsor", value="University of Windsor"),
+            discord.SelectOption(label="Queens University", value="Queens University"),
             discord.SelectOption(label="University of Manitoba", value="University of Manitoba"),
-            discord.SelectOption(label="Université de Montréal", value="Université de Montréal"),
             discord.SelectOption(label="McMaster University", value="McMaster University"),
-            discord.SelectOption(label="UofT St. George", value="UofT St. George"),
+            discord.SelectOption(label="UofT St.George", value="UofT St.George"),
             discord.SelectOption(label="UofT Scarborough", value="UofT Scarborough")
         ]
 
-
-        super().__init__(placeholder="Select your University", min_values=1, max_values=1, options=options)
+        super().__init__(placeholder="Select your University in Ontario", min_values=1, max_values=1, options=options)
 
     async def callback(self, interaction: discord.Interaction):
         # Find the role that matches the selected university
@@ -332,6 +331,43 @@ class UniversitySelect(Select):
             # If the role exists, add it to the member
             await interaction.user.add_roles(role)
 
+
+class QuebecUniversitiesSelect(Select):
+    def __init__(self):
+        options = [
+            discord.SelectOption(label="Universite Laval", value="Universite Laval"),
+            discord.SelectOption(label="Universite de Montreal", value="Universite de Montreal")
+        ]
+
+        super().__init__(placeholder="Select your University in Quebec", min_values=1, max_values=1, options=options)
+
+    async def callback(self, interaction: discord.Interaction):
+        # Find the role that matches the selected university
+        role = discord.utils.get(interaction.guild.roles, name=self.values[0])
+
+        #await interaction.response.send_message(f"Your selected university is: {self.values[0]}")
+        # Check if the role exists
+        if role is not None:
+            # If the role exists, add it to the member
+            await interaction.user.add_roles(role)
+
+
+class BritishColumbiaUniversitiesSelect(Select):
+    def __init__(self):
+        options = [
+            discord.SelectOption(label="University of British Columbia", value="University of British Columbia"),
+        ]
+
+        super().__init__(placeholder="Select your University in British Columbia", min_values=1, max_values=1, options=options)
+    async def callback(self, interaction: discord.Interaction):
+        # Find the role that matches the selected university
+        role = discord.utils.get(interaction.guild.roles, name=self.values[0])
+
+        #await interaction.response.send_message(f"Your selected university is: {self.values[0]}")
+        # Check if the role exists
+        if role is not None:
+            # If the role exists, add it to the member
+            await interaction.user.add_roles(role)
 
 class InterestSelect(Select):
     def __init__(self):
