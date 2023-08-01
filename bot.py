@@ -26,7 +26,7 @@ async def on_ready():
 
 
 
-welcome_enabled = True  # initially the welcome messages are enabled
+welcome_enabled = False  # initially the welcome messages are enabled
 
 
 
@@ -40,26 +40,44 @@ async def toggle_welcome(ctx):
 
 
 
+@bot.tree.command(name='trigger_welcome')
+@commands.has_permissions(administrator=True)  # only allow administrators to run this command
+async def trigger_welcome(ctx, user: discord.User):
+    await send_welcome(user)
+    await ctx.response.send_message(f"Sent a welcome DM to {user.display_name}.")
+
+
+class WelcomeView(discord.ui.View):
+    def __init__(self):
+        super().__init__()
+        self.add_item(discord.ui.Button(label="💻 CCubed Website", style=discord.ButtonStyle.link, url="https://www.ccubed.dev/"))
+        self.add_item(discord.ui.Button(label="🔗 Linktree", style=discord.ButtonStyle.link, url="https://linktr.ee/ccubed.dev"))
+
+async def send_welcome(member):
+    embed = discord.Embed(
+        title="Welcome to Computing Councils of Canada",
+        description=(
+            "We are delighted to have you join us. "
+            "This community is focused on bringing together "
+            "all enthusiasts and professionals related to computing. "
+            "Here, we discuss, share, and learn about various computing topics. "
+            "Feel free to explore, engage in discussions, and most importantly, "
+            "have fun! If you have any questions, don't hesitate to ask."
+        ),
+        color=0x1a384c,
+    )
+
+    embed.set_thumbnail(url="https://media.licdn.com/dms/image/C4E0BAQFZ83Q-ryJyYw/company-logo_200_200/0/1612553017924?e=2147483647&v=beta&t=gQtTxgENMUZilwaIRFW-UVbVkEdX0W7HdhFmDXj5Kng")
+
+    view = WelcomeView()
+
+    await member.send(embed=embed, view=view)
 
 @bot.event
 async def on_member_join(member):
     global welcome_enabled
     if welcome_enabled:
-
-        embed = discord.Embed(
-            title="Welcome to Computing Councils of Canada",
-            description=(
-                "We are delighted to have you join us. "
-                "This community is focused on bringing together "
-                "all enthusiasts and professionals related to computing. "
-                "Here, we discuss, share, and learn about various computing topics. "
-                "Feel free to explore, engage in discussions, and most importantly, "
-                "have fun! If you have any questions, don't hesitate to ask."
-            ),
-            color=0x1a384c,
-        )
-        embed.set_thumbnail(url="https://media.licdn.com/dms/image/C4E0BAQFZ83Q-ryJyYw/company-logo_200_200/0/1612553017924?e=2147483647&v=beta&t=gQtTxgENMUZilwaIRFW-UVbVkEdX0W7HdhFmDXj5Kng")
-        await message.author.send(embed=embed)
+        send_welcome(member)
 
 
 
