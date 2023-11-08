@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 import asyncio, aiohttp, os, random, openai, json
 from discord.interactions import Interaction
 
-openai.api_key = 'sk-pWN5Q5EjqXrdf7b7sTl' + 'ET3BlbkFJYMFjo4CVEX3Zn2jy3QNG' # Free tier key, sharable
+openai.api_key = 'sk-NwDkRxAL5WlA5KFU75' + 'CLT3BlbkFJGRt9zLolWJN1cpp5KvFx' # Free tier key, sharable
 
 bot = commands.Bot(command_prefix="!", intents=discord.Intents.all())
 intents = discord.Intents.default()
