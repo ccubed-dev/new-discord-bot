@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 import asyncio, aiohttp, os, random, openai, json
 from discord.interactions import Interaction
 
-openai.api_key = 'sk-jEHPwAEyS80PmZTlHq6' + 'LT3BlbkFJvVEnsYaN8mSGTZ3ECm6z' # Free tier key, sharable
+openai.api_key = 'sk-pWN5Q5EjqXrdf7b7sTl' + 'ET3BlbkFJYMFjo4CVEX3Zn2jy3QNG' # Free tier key, sharable
 
 bot = commands.Bot(command_prefix="!", intents=discord.Intents.all())
 intents = discord.Intents.default()
@@ -24,7 +24,7 @@ async def on_ready():
 
 
 
-
+automod = False
 
 welcome_enabled = False  # initially the welcome messages are enabled
 
@@ -145,58 +145,62 @@ class MessageView(discord.ui.View):
 async def on_message(message):
     if message.author == bot.user:
         return
-        
-    # Create a conversation with the model
-    # The prompt makes the model very eager to flag messages - maybe turn down the intensity to avoid randomly flagging ppl? ¯\_(ツ)_/¯
-    empty = "{" + "}"
-    conversation = [
-        {"role": "system", "content": "You are a content review model. Your task is to review incoming messages and determine if they should be flagged for review. If a message is flagged, explain what parts were flagged and why. Only derogatory messages with clear malice should be flagged, ones made in good faith can remain unflagged. Respond ONLY in the correct format, your only two options are empty brackets and flagged=true, sections and the reason in JSON format."},
-        {"role": "user", "content": "Check message: hi"},
-        {"role": "assistant", "content": empty},
-        {"role": "user", "content": "Check message: what's your github? i'll add you there."},
-        {"role": "assistant", "content": empty},
-        {"role": "user", "content": "Check message: Sure you can check my js stuff there its https://github.com/stevejobs"},
-        {"role": "assistant", "content": empty},
-        {"role": "user", "content": "Check message: bro you're actually so stupid and dumb and a dummy poopy head and you should actually go back to grade 1 like why would you think javascript is a good language"},
-        {"role": "assistant", "content": '{"flagged":true,"sections":["stupid and dumb","dummy poopy head","go back to grade 1"],"reason":"The user\'s statement includes highly offensive language, personal attacks, and derogatory remarks."}'},
-        {"role": "user", "content": "Check message: ??? What?"},
-        {"role": "assistant", "content": empty},
-        {"role": "user", "content": "Check message: " + message.content}
-    ]
-    # Generate a response from the model
-    response = openai.ChatCompletion.create(
-      model="gpt-3.5-turbo",
-      messages=conversation
-    )
+    
 
-    # Get the model's reply
-    model_reply = response['choices'][0]['message']['content']
-  
-    resp = json.loads(model_reply)
-    # If the model decides to flag the message
-    if 'flagged' in resp:
-        guild = discord.utils.get(bot.guilds, name='Computing Councils of Canada - Internal')
-        channel = discord.utils.get(guild.channels, name='bot-test')
+    if automod:
 
-        embed = discord.Embed(title="🚩 Flagged Message Review 🚩", description="A message has been flagged for review.", color=0xff0000)
-        embed.add_field(name="User", value=message.author.mention, inline=False)
+        # Create a conversation with the model
+        # The prompt makes the model very eager to flag messages - maybe turn down the intensity to avoid randomly flagging ppl? ¯\_(ツ)_/¯
+        empty = "{" + "}"
+        conversation = [
+            {"role": "system", "content": "You are a content review model. Your task is to review incoming messages and determine if they should be flagged for review. If a message is flagged, explain what parts were flagged and why. Only derogatory messages with clear malice should be flagged, ones made in good faith can remain unflagged. Respond ONLY in the correct format, your only two options are empty brackets and flagged=true, sections and the reason in JSON format."},
+            {"role": "user", "content": "Check message: hi"},
+            {"role": "assistant", "content": empty},
+            {"role": "user", "content": "Check message: what's your github? i'll add you there."},
+            {"role": "assistant", "content": empty},
+            {"role": "user", "content": "Check message: Sure you can check my js stuff there its https://github.com/stevejobs"},
+            {"role": "assistant", "content": empty},
+            {"role": "user", "content": "Check message: bro you're actually so stupid and dumb and a dummy poopy head and you should actually go back to grade 1 like why would you think javascript is a good language"},
+            {"role": "assistant", "content": '{"flagged":true,"sections":["stupid and dumb","dummy poopy head","go back to grade 1"],"reason":"The user\'s statement includes highly offensive language, personal attacks, and derogatory remarks."}'},
+            {"role": "user", "content": "Check message: ??? What?"},
+            {"role": "assistant", "content": empty},
+            {"role": "user", "content": "Check message: " + message.content}
+        ]
+        # Generate a response from the model
+        response = openai.ChatCompletion.create(
+          model="gpt-3.5-turbo",
+          messages=conversation
+        )
 
-        # Replace flagged part in the message with a bolded version
-        flagged_part = resp['sections']
-        bolded_msg = message.content
-        for flagged_section in flagged_part:
-            bolded_msg = bolded_msg.replace(flagged_section, f'**{flagged_section}**')
+        # Get the model's reply
+        model_reply = response['choices'][0]['message']['content']
+      
+        resp = json.loads(model_reply)
+        # If the model decides to flag the message
+        if 'flagged' in resp:
+            guild = discord.utils.get(bot.guilds, name='Computing Councils of Canada - Internal')
+            channel = discord.utils.get(guild.channels, name='bot-testing')
 
-        embed.add_field(name="Message Content", value=bolded_msg, inline=False)
-        embed.add_field(name="Reason for Flagging", value=resp['reason'], inline=False)
-        embed.set_thumbnail(url=message.author.avatar)
+            embed = discord.Embed(title="🚩 Flagged Message Review 🚩", description="A message has been flagged for review.", color=0xff0000)
+            embed.add_field(name="User", value=message.author.mention, inline=False)
 
-        # Send the message
-        await channel.send(embed=embed, view=MessageView(message))
+            # Replace flagged part in the message with a bolded version
+            flagged_part = resp['sections']
+            bolded_msg = message.content
+            for flagged_section in flagged_part:
+                bolded_msg = bolded_msg.replace(flagged_section, f'**{flagged_section}**')
 
-    # process commands after handling the message
+            embed.add_field(name="Message Content", value=bolded_msg, inline=False)
+            embed.add_field(name="Reason for Flagging", value=resp['reason'], inline=False)
+            embed.set_thumbnail(url=message.author.avatar)
+
+            # Send the message
+            await channel.send(embed=embed, view=MessageView(message))
+
+
+   # process commands after handling the message
     await bot.process_commands(message)
-
+    return
 
 class PollOptionButton(Button):
     def __init__(self, label):
@@ -255,7 +259,7 @@ async def eightball(interaction: discord.Interaction, *, question: str):
     
     # Generate a response from the model
     response = openai.ChatCompletion.create(
-      model="gpt-3.5-turbo",
+      model="gpt-4-1106-preview",
       messages=conversation
     )
     
@@ -563,11 +567,11 @@ async def check_events():
 
     for event in events:
         if event.time - timedelta(hours=1) <= datetime.now() <= event.time and not event.reminded:
-            await send_embed(guild, 'bot-test', "⏰ Event Reminder ⏰", f"The event {event.title} is starting in 1 hour!", event, 0x1a384c)
+            await send_embed(guild, 'bot-testing', "⏰ Event Reminder ⏰", f"The event {event.title} is starting in 1 hour!", event, 0x1a384c)
             event.reminded = True
 
         elif datetime.now() >= event.time:
-            await send_embed(guild, 'bot-test', "⏰ Event Reminder ⏰", f"The event {event.title} is starting NOW!", event, 0x1a384c)
+            await send_embed(guild, 'bot-testing', "⏰ Event Reminder ⏰", f"The event {event.title} is starting NOW!", event, 0x1a384c)
             # Remove the event from the list
             events.remove(event)
 
@@ -593,7 +597,7 @@ async def queue_event(interaction: discord.Interaction, event_time: str, roles: 
     events.append(event)
 
     # Send the embed
-    await send_embed(guild, 'bot-test', "⏰ Event Created ⏰", f"The event {event.title} has been scheduled for " + event.time.strftime("%A, %b. %d at %I:%M%p") + ".", event, 0x1a384c)
+    await send_embed(guild, 'bot-testing', "⏰ Event Created ⏰", f"The event {event.title} has been scheduled for " + event.time.strftime("%A, %b. %d at %I:%M%p") + ".", event, 0x1a384c)
 
 @bot.tree.command(name='clear')
 @commands.has_permissions(administrator=True)  # only allow administrators to run this command
